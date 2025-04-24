@@ -39,7 +39,7 @@ func (r *Router) Get(path string, handler func(http.ResponseWriter, *http.Reques
 }
 
 func (r *Router) Post(path string, handler func(http.ResponseWriter, *http.Request)) error {
-	return r.Add(http.MethodGet, path, handler)
+	return r.Add(http.MethodPost, path, handler)
 }
 
 
