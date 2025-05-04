@@ -7,10 +7,11 @@ import (
 
 // アプリケーション全体を管理する構造体
 type App struct {
-	Router RouterInterface
+	Router     RouterInterface
+	Middleware []Middleware
 }
 
-// 追加：Routerをインターフェース化
+// Routerをインターフェース化
 type RouterInterface interface {
 	Add(method, path string, handler func(http.ResponseWriter, *http.Request)) error
 	Get(path string, handler func(http.ResponseWriter, *http.Request)) error
@@ -52,7 +53,7 @@ func (r *Router) Post(path string, handler func(http.ResponseWriter, *http.Reque
 	return r.Add(http.MethodPost, path, handler)
 }
 
-// 追加：routerにServeHTTPメソッドを実装
+// routerにServeHTTPメソッドを実装
 func (rt *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if handlers, ok := rt.routingTable[r.Method]; ok {
@@ -67,10 +68,29 @@ func (rt *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	handler.ServeHTTP(w, r)
 }
 
+// 追加：ミドルウェアのサポート
+type Middleware func(http.Handler) http.Handler
+
+func (a *App) Use(m Middleware) {
+	a.Middleware = append(a.Middleware, m)
+}
+
 // ServeHTTPメソッドを実装することで、http.Handlerインターフェースを満たすようになる
 // これにより、http.ListenAndServeに渡すことができるようになる
 func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-    a.Router.ServeHTTP(w, r)
+	// ミドルウェアを適用
+	// 最終的にRouterのServeHTTPを呼び出すハンドラ
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request){
+		a.Router.ServeHTTP(w, r)
+	})
+
+	// ミドルウェアを逆順に適用
+	for i := len(a.Middleware) - 1; i >= 0; i-- {
+		handler = http.HandlerFunc(a.Middleware[i](handler).ServeHTTP)
+	}
+
+	// 最終的なハンドラを実行
+	handler.ServeHTTP(w, r)
 }
 
 // App構造体の新しいインスタンスを作成し、初期化する関数
