@@ -13,7 +13,7 @@ func main() {
 	app := fwsample.New()
 
 	// ログを出力するミドルウェアをアプリケーション全体に適用
-	app.Use(middleware.Logging)
+	app.Use(middleware.Logger)
 
 	// ハンドラを登録
 	app.Router.Get("/hello", helloHandler)
