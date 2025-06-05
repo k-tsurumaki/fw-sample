@@ -20,8 +20,8 @@ func main() {
 	app.Router.Post("/echo", echoHandler)
 
 	log.Println("Starting server on :8080")
-	if err := app.Run(":8080"); err != nil {
-		log.Fatal(err)
+	if err := app.Run(); err != nil {
+		log.Fatalf("Server failed: %v", err)
 	}
 }
 
