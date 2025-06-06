@@ -1,4 +1,4 @@
-package router
+package fwsample
 
 import (
 	"errors"
@@ -10,7 +10,7 @@ type Router struct {
 	routingTable map[string]map[string]func(http.ResponseWriter, *http.Request)
 }
 
-func New() *Router {
+func NewRouter() *Router {
 	return &Router{
 		routingTable: make(map[string]map[string]func(http.ResponseWriter, *http.Request)),
 	}

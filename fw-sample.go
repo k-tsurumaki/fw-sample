@@ -3,9 +3,7 @@ package fwsample
 import (
 	"net/http"
 
-	"github.com/k-tsurumaki/fw-sample/config"
 	"github.com/k-tsurumaki/fw-sample/middleware"
-	"github.com/k-tsurumaki/fw-sample/router"
 )
 
 // アプリケーション全体を管理する構造体
@@ -40,15 +38,15 @@ func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func New() *App {
 	return &App{
-		Router: router.New(),
+		Router: NewRouter(),
 	}
 }
 
 func (a *App) Run() error {
-	return a.RunWithConfig(config.DefaultConfig)
+	return a.RunWithConfig(DefaultConfig)
 }
 
-func (a *App) RunWithConfig(cfg config.Config) error {
+func (a *App) RunWithConfig(cfg Config) error {
 	server := &http.Server{
 		Addr:         cfg.Addr,
 		Handler:      a,
