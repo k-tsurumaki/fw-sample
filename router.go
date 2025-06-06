@@ -7,19 +7,19 @@ import (
 
 // ルーティング処理を担当する構造体
 type Router struct {
-	routingTable map[string]map[string]func(http.ResponseWriter, *http.Request)
+	routingTable map[string]map[string]HandlerFunc
 }
 
 func NewRouter() *Router {
 	return &Router{
-		routingTable: make(map[string]map[string]func(http.ResponseWriter, *http.Request)),
+		routingTable: make(map[string]map[string]HandlerFunc),
 	}
 }
 
 // ルーティングテーブルにハンドラを追加する関数
-func (r *Router) add(method, path string, handler func(http.ResponseWriter, *http.Request)) error {
+func (r *Router) add(method, path string, handler HandlerFunc) error {
 	if r.routingTable[method] == nil {
-		r.routingTable[method] = make(map[string]func(http.ResponseWriter, *http.Request))
+		r.routingTable[method] = make(map[string]HandlerFunc)
 	}
 	if r.routingTable[method][path] != nil {
 		return errors.New("handler already exists")
@@ -28,7 +28,7 @@ func (r *Router) add(method, path string, handler func(http.ResponseWriter, *htt
 	return nil
 }
 
-func (r *Router) Add(method, path string, handler func(http.ResponseWriter, *http.Request)) error {
+func (r *Router) Add(method, path string, handler HandlerFunc) error {
 	if method != http.MethodGet && method != http.MethodPost {
 		return errors.New("unsupported method")
 	}
@@ -36,26 +36,26 @@ func (r *Router) Add(method, path string, handler func(http.ResponseWriter, *htt
 }
 
 // GETメソッドのハンドラを追加する関数
-func (r *Router) Get(path string, handler func(http.ResponseWriter, *http.Request)) error {
+func (r *Router) Get(path string, handler HandlerFunc) error {
 	return r.Add(http.MethodGet, path, handler)
 }
 
 // POSTメソッドのハンドラを追加する関数
-func (r *Router) Post(path string, handler func(http.ResponseWriter, *http.Request)) error {
+func (r *Router) Post(path string, handler HandlerFunc) error {
 	return r.Add(http.MethodPost, path, handler)
 }
 
 // routerにServeHTTPメソッドを実装
-func (rt *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if handlers, ok := rt.routingTable[r.Method]; ok {
-			if handler, ok := handlers[r.URL.Path]; ok {
-				handler(w, r)
-				return
+func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	if handlers, ok := r.routingTable[req.Method]; ok {
+		if handler, ok := handlers[req.URL.Path]; ok {
+			ctx := &context{
+				req: req,
+				rw: w,
+				params: map[string]string{},
 			}
+			handler(ctx)
+			return
 		}
-		// ルーティングにマッチしなかった場合は404エラーを返す
-		http.NotFound(w, r)
-	})
-	handler.ServeHTTP(w, r)
+	}
 }

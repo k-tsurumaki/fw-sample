@@ -1,11 +1,11 @@
 package main
 
 import (
+	"io"
 	"log"
 	"net/http"
 
 	fwsample "github.com/k-tsurumaki/fw-sample"
-	"github.com/k-tsurumaki/fw-sample/middleware"
 )
 
 func main() {
@@ -13,7 +13,7 @@ func main() {
 	app := fwsample.New()
 
 	// ログを出力するミドルウェアをアプリケーション全体に適用
-	app.Use(middleware.Logger)
+	app.Use(fwsample.Logger)
 
 	// ハンドラを登録
 	app.Router.Get("/hello", helloHandler)
@@ -25,12 +25,15 @@ func main() {
 	}
 }
 
-func helloHandler(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Hello World!"))
+func helloHandler(ctx fwsample.Context) {
+	ctx.Text(http.StatusOK, "Hello World!!")
 }
 
-func echoHandler(w http.ResponseWriter, r *http.Request) {
-	body := make([]byte, r.ContentLength)
-	r.Body.Read(body)
-	w.Write(body)
+func echoHandler(ctx fwsample.Context) {
+	body, err := io.ReadAll(ctx.Request().Body)
+	if err != nil {
+		ctx.Text(http.StatusInternalServerError, "failed to read body")
+		return
+	}
+	ctx.Text(http.StatusOK, string(body))
 }

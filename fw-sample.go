@@ -2,38 +2,46 @@ package fwsample
 
 import (
 	"net/http"
-
-	"github.com/k-tsurumaki/fw-sample/middleware"
 )
 
 // アプリケーション全体を管理する構造体
 type App struct {
 	Router     RouterInterface
-	Middleware []middleware.Middleware
+	Middleware []MiddlewareFunc
 }
 
 type RouterInterface interface {
-	Add(method, path string, handler func(http.ResponseWriter, *http.Request)) error
-	Get(path string, handler func(http.ResponseWriter, *http.Request)) error
-	Post(path string, handler func(http.ResponseWriter, *http.Request)) error
+	Add(method, path string, handler HandlerFunc) error
+	Get(path string, handler HandlerFunc) error
+	Post(path string, handler HandlerFunc) error
 	ServeHTTP(w http.ResponseWriter, r *http.Request)
 }
 
-func (a *App) Use(m middleware.Middleware) {
+type HandlerFunc func(Context)
+
+type MiddlewareFunc func(HandlerFunc) HandlerFunc
+
+func (a *App) Use(m MiddlewareFunc) {
 	a.Middleware = append(a.Middleware, m)
 }
 
 func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		a.Router.ServeHTTP(w, r)
-	})
+	ctx := &context{
+		req:    r,
+		rw:     w,
+		params: map[string]string{},
+	}
+
+	handler := func(c Context) {
+		a.Router.ServeHTTP(c.ResponseWriter(), c.Request())
+	}
 
 	// ミドルウェアを逆順に適用
 	for i := len(a.Middleware) - 1; i >= 0; i-- {
-		handler = http.HandlerFunc(a.Middleware[i](handler).ServeHTTP)
+		handler = a.Middleware[i](handler)
 	}
 
-	handler.ServeHTTP(w, r)
+	handler(ctx)
 }
 
 func New() *App {
