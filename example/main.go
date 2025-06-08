@@ -6,14 +6,19 @@ import (
 	"net/http"
 
 	fwsample "github.com/k-tsurumaki/fw-sample"
+	"github.com/k-tsurumaki/fw-sample/middleware"
 )
 
 func main() {
 	// アプリケーションのインスタンスを初期化
 	app := fwsample.New()
 
+	stdlog := &fwsample.StdLogger{}
+
+	logger := &middleware.LoggingMiddleware{Logger: stdlog}
+
 	// ログを出力するミドルウェアをアプリケーション全体に適用
-	app.Use(fwsample.Logger)
+	app.Use(logger.Logging)
 
 	// ハンドラを登録
 	app.Router.Get("/hello", helloHandler)

@@ -4,9 +4,17 @@ import (
 	"log"
 )
 
-func Logger(next HandlerFunc) HandlerFunc {
-	return func(ctx Context) {
-		log.Printf("Request: %s %s", ctx.Request().Method, ctx.Request().URL.Path)
-		next(ctx)
-	}
+type Logger interface {
+	Info(msg string, args ...any)
+	Error(msg string, args ...any)
+}
+
+type StdLogger struct{}
+
+func (l *StdLogger) Info(msg string, args ...any) {
+	log.Printf("[INFO] "+msg, args...)
+}
+
+func (l *StdLogger) Error(msg string, args ...any) {
+	log.Printf("[ERROR] "+msg, args...)
 }
