@@ -1,9 +1,10 @@
-package fwsample
+package fwsample_test
 
 import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	fwsample "github.com/k-tsurumaki/fw-sample"
 )
 
 type MockRouter struct {
@@ -40,7 +41,7 @@ func TestAppServeHTTP(t *testing.T) {
 	mockRouter := &MockRouter{
 		routingTable: make(map[string]map[string]func(http.ResponseWriter, *http.Request)),
 	}
-	app := &App{Router: mockRouter}
+	app := &fwsample.App{Router: mockRouter}
 
 	// Getリクエストが来たらstatusOKを返すハンドラを追加
 	mockRouter.Get("/test", func(w http.ResponseWriter, r *http.Request) {

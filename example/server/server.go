@@ -12,8 +12,11 @@ func main() {
 	// アプリケーションのインスタンスを初期化
 	app := fwsample.New()
 
-	// ログを出力するミドルウェアをアプリケーション全体に適用
-	app.Use(middleware.Logger)
+	stdlog := &fwsample.StdLoggerWithRequestID{}
+	logger := &middleware.LoggingMiddleware{Logger: stdlog}
+
+	app.Use(middleware.RequestID)
+	app.Use(logger.Logging)
 
 	// ハンドラを登録
 	app.Router.Get("/hello", helloHandler)
