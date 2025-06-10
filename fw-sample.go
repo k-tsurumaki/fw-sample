@@ -69,6 +69,16 @@ type HandlerFunc http.HandlerFunc
 
 type Middleware func(HandlerFunc) HandlerFunc
 
+type ResponseWriterWithStatus struct {
+	http.ResponseWriter
+	StatusCode int
+}
+
+func (w *ResponseWriterWithStatus) WriteHeader(code int) {
+	w.StatusCode = code
+	w.ResponseWriter.WriteHeader(code)
+}
+
 type RouterInterface interface {
 	Add(method, path string, handler func(http.ResponseWriter, *http.Request)) error
 	Get(path string, handler func(http.ResponseWriter, *http.Request)) error
@@ -85,7 +95,7 @@ func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		a.Router.ServeHTTP(w, r)
 	}
 
-	// ミドルウェアを逆順に適用
+	// apply middleware in reverse order
 	for i := len(a.Middleware) - 1; i >= 0; i-- {
 		handler = a.Middleware[i](handler)
 	}

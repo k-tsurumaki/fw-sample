@@ -65,9 +65,9 @@ type FwError struct {
 
 func (e *FwError) Error() string {
 	if e.Err != nil {
-		return fmt.Sprintf("code=%d, message=%v", e.Code, e.Message)
+		return fmt.Sprintf("code=%d, message=%v, error=%v", e.Code, e.Message, e.Err)
 	}
-	return fmt.Sprintf("code=%d, message=%v, error=%v", e.Code, e.Message, e.Err)
+	return fmt.Sprintf("code=%d, message=%v", e.Code, e.Message)
 }
 
 func (e *FwError) Unwrap() error {

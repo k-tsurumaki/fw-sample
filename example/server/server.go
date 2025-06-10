@@ -9,16 +9,16 @@ import (
 )
 
 func main() {
-	// アプリケーションのインスタンスを初期化
+	// create app instance
 	app := fwsample.New()
 
-	stdlog := &fwsample.StdLoggerWithRequestID{}
+	stdlog := &middleware.StdLoggerWithRequestID{}
 	logger := &middleware.LoggingMiddleware{Logger: stdlog}
 
 	app.Use(middleware.RequestID)
 	app.Use(logger.Logging)
 
-	// ハンドラを登録
+	// register handlers
 	app.Router.Get("/hello", helloHandler)
 	app.Router.Post("/echo", echoHandler)
 
